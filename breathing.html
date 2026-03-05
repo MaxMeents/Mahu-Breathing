@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breathe</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Courier+Prime&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: radial-gradient(circle at center, #0a192f 0%, #020b18 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    overflow: hidden;
+    color: white;
+  }
+
+  .stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--d) ease-in-out infinite alternate;
+    opacity: var(--o);
+  }
+
+  @keyframes twinkle {
+    from { opacity: var(--o); transform: scale(1); }
+    to { opacity: calc(var(--o) * 0.3); transform: scale(0.7); }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 44px;
+  }
+
+  .orb-wrap {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .orb-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(120, 180, 255, 0.15);
+    animation: rotate var(--rt) linear infinite;
+  }
+
+  .orb-ring:nth-child(1) { width: 100%; height: 100%; --rt: 20s; }
+  .orb-ring:nth-child(2) { width: 80%; height: 80%; --rt: 15s; animation-direction: reverse; border-color: rgba(120,180,255,0.1); }
+  .orb-ring:nth-child(3) { width: 60%; height: 60%; --rt: 25s; border-color: rgba(180,220,255,0.08); }
+
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .orb {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%,
+      rgba(180, 220, 255, 0.9),
+      rgba(80, 140, 220, 0.7) 40%,
+      rgba(20, 60, 140, 0.5) 70%,
+      rgba(5, 20, 60, 0.3)
+    );
+    box-shadow:
+      0 0 40px rgba(100, 160, 255, 0.4),
+      0 0 80px rgba(80, 130, 220, 0.2),
+      0 0 120px rgba(60, 100, 200, 0.1),
+      inset 0 0 30px rgba(200, 230, 255, 0.2);
+    transition: transform 0.05s linear, box-shadow 0.05s linear;
+    position: relative;
+    z-index: 2;
+  }
+
+  .number {
+    font-family: 'Courier Prime', monospace;
+    font-size: 4rem;
+    letter-spacing: 0.05em;
+    color: white;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+    min-width: 10ch;
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .phase {
+    font-size: 1.8rem;
+    font-weight: 300;
+    font-style: italic;
+    letter-spacing: 0.1em;
+    color: white;
+    text-align: center;
+    min-height: 3rem;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+    transition: opacity 0.5s ease;
+    max-width: 600px;
+    line-height: 1.4;
+    margin-top: 10px;
+  }
+
+  .arc-svg {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .arc-track {
+    fill: none;
+    stroke: rgba(100, 150, 220, 0.1);
+    stroke-width: 2;
+  }
+
+  .arc-forward {
+    fill: none;
+    stroke: rgba(150, 200, 255, 0.75);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .arc-reverse {
+    fill: none;
+    stroke: rgba(200, 230, 255, 0.45);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .start-btn {
+    background: transparent;
+    border: 1px solid rgba(150, 200, 255, 0.4);
+    color: rgba(200, 225, 255, 0.8);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    letter-spacing: 0.15em;
+    padding: 12px 40px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    border-radius: 2px;
+  }
+
+  .start-btn:hover {
+    background: rgba(100, 160, 255, 0.1);
+    border-color: rgba(150, 200, 255, 0.7);
+    color: white;
+    box-shadow: 0 0 20px rgba(100, 160, 255, 0.2);
+  }
+
+  .cycle-indicator {
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    color: rgba(150, 190, 255, 0.4);
+    text-transform: uppercase;
+    font-family: 'Courier Prime', monospace;
+    min-height: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="container">
+  <div class="cycle-indicator" id="cycleIndicator"></div>
+
+  <div class="orb-wrap">
+    <div class="orb-ring"></div>
+    <div class="orb-ring"></div>
+    <div class="orb-ring"></div>
+    <svg class="arc-svg" viewBox="0 0 260 260" style="transform: rotate(-90deg); transform-origin: center;">
+      <circle class="arc-track"   cx="130" cy="130" r="124"/>
+      <circle class="arc-forward" id="arcForward" cx="130" cy="130" r="124" style="transform-origin: center;"/>
+      <circle class="arc-reverse" id="arcReverse" cx="130" cy="130" r="124" style="transform-origin: center; transform: scaleX(-1);"/>
+    </svg>
+    <div class="orb" id="orb"></div>
+  </div>
+
+  <div class="number" id="number">0.00000</div>
+  <div class="phase"  id="phase">ready</div>
+  <button class="start-btn" id="startBtn" onclick="startBreathing()">begin</button>
+</div>
+
+<script>
+  // ── Stars ────────────────────────────────────────────────
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 120; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2 + 0.5;
+    s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--o:${Math.random()*0.6+0.1};--d:${Math.random()*4+2}s;animation-delay:${Math.random()*5}s;`;
+    starsEl.appendChild(s);
+  }
+
+  // ── Phases ───────────────────────────────────────────────
+  let running       = false;
+  let currentPhase  = 0;
+
+  const phases = [
+    { label: 'breath in from the universe', type: 'in',         ms: 4000 },
+    { label: 'be you',                        type: 'hold-full',  ms: 4000 },
+    { label: 'breath out, expand into the universe', type: 'out', ms: 4000 },
+    { label: 'be the universe, be god, be source',  type: 'hold-empty', ms: 4000 },
+  ];
+
+  // ── Arc constants ────────────────────────────────────────
+  const R = 124;
+  const C = 2 * Math.PI * R; // circumference
+
+  const arcFwd = document.getElementById('arcForward');
+  const arcRev = document.getElementById('arcReverse');
+
+  arcFwd.style.strokeDasharray = C;
+  arcRev.style.strokeDasharray = C;
+
+  function setArcFwd(fill) { arcFwd.style.strokeDashoffset = C * (1 - fill); }
+  function setArcRev(fill) { arcRev.style.strokeDashoffset = C * (1 - fill); }
+
+  let phaseStart    = null;
+  let rafId         = null;
+  let cycleCount    = 0;
+
+  const numberEl = document.getElementById('number');
+  const phaseEl  = document.getElementById('phase');
+  const orbEl    = document.getElementById('orb');
+  const startBtn = document.getElementById('startBtn');
+  const cycleEl  = document.getElementById('cycleIndicator');
+
+  // ── Orb glow helper ──────────────────────────────────────
+  function setOrb(v) { // v 0..4
+    const t = v / 4;
+    const g = 15 + t * 65;
+    orbEl.style.transform = `scale(${0.65 + t * 0.6})`;
+    orbEl.style.boxShadow = `0 0 ${g}px rgba(100,160,255,${.25+t*.45}),0 0 ${g*2}px rgba(80,130,220,${.12+t*.22}),0 0 ${g*3}px rgba(60,100,200,${.06+t*.12}),inset 0 0 ${12+t*28}px rgba(200,230,255,${.12+t*.22})`;
+  }
+
+  // ── Main render loop ─────────────────────────────────────
+  function frame(ts) {
+    if (!running) return;
+    if (!phaseStart) phaseStart = ts;
+
+    const elapsed = ts - phaseStart;
+    const ph = phases[currentPhase];
+    const t  = Math.min(elapsed / ph.ms, 1);
+
+    switch (ph.type) {
+      case 'in':
+        // 4 to 0 (user asked for 4 to 0, 0 to 4, 4 to 0, 0 to 4)
+        numberEl.textContent = ((1 - t) * 4).toFixed(5);
+        setArcFwd(t);
+        setArcRev(0);
+        setOrb(t * 4);
+        break;
+
+      case 'hold-full':
+        // 0 to 4
+        numberEl.textContent = (t * 4).toFixed(5);
+        setArcFwd(1);
+        setArcRev(t);
+        setOrb(4);
+        break;
+
+      case 'out':
+        // 4 to 0
+        numberEl.textContent = ((1 - t) * 4).toFixed(5);
+        setArcFwd(1 - t);
+        setArcRev(0);
+        setOrb((1 - t) * 4);
+        break;
+
+      case 'hold-empty':
+      // 0 to 4
+        numberEl.textContent = (t * 4).toFixed(5);
+        setArcFwd(0);
+        setArcRev(0);
+        setOrb(0);
+        break;
+    }
+
+    if (t >= 1) {
+      currentPhase = (currentPhase + 1) % phases.length;
+      if (currentPhase === 0) {
+        cycleCount++;
+        cycleEl.textContent = `cycle ${cycleCount}`;
+      }
+      phaseEl.style.opacity = '0';
+      const nextLabel = phases[currentPhase].label;
+      setTimeout(() => { phaseEl.textContent = nextLabel; phaseEl.style.opacity = '1'; }, 300);
+      phaseStart = ts;
+    }
+
+    rafId = requestAnimationFrame(frame);
+  }
+
+  // ── Reset ────────────────────────────────────────────────
+  function reset() {
+    numberEl.textContent = '0.00000';
+    phaseEl.textContent  = 'ready';
+    cycleEl.textContent  = '';
+    setOrb(0);
+    setArcFwd(0);
+    setArcRev(0);
+  }
+
+  // ── Start / stop ─────────────────────────────────────────
+  function startBreathing() {
+    if (running) {
+      running = false;
+      cancelAnimationFrame(rafId);
+      startBtn.textContent = 'begin';
+      currentPhase = 0;
+      phaseStart   = null;
+      cycleCount   = 0;
+      reset();
+      return;
+    }
+    running      = true;
+    currentPhase = 0;
+    phaseStart   = null;
+    cycleCount   = 1;
+    startBtn.textContent    = 'stop';
+    phaseEl.textContent     = phases[0].label;
+    phaseEl.style.opacity   = '1';
+    cycleEl.textContent     = 'cycle 1';
+    rafId = requestAnimationFrame(frame);
+  }
+
+  reset();
+</script>
+</body>
+</html>
