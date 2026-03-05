@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Breathe</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Courier+Prime&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --wrap: min(80vw, 80vh, 400px);
+    --orb:  calc(var(--wrap) * 0.45);
+  }
+
+  body {
+    background: radial-gradient(circle at center, #0a192f 0%, #020b18 100%);
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    overflow: hidden;
+    color: white;
+  }
+
+  .stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--d) ease-in-out infinite alternate;
+    opacity: var(--o);
+  }
+
+  @keyframes twinkle {
+    from { opacity: var(--o); transform: scale(1); }
+    to { opacity: calc(var(--o) * 0.3); transform: scale(0.7); }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(14px, 3.5vh, 44px);
+    padding-bottom: clamp(150px, 28vh, 210px);
+    padding-left: 16px;
+    padding-right: 16px;
+    width: 100%;
+  }
+
+  .orb-wrap {
+    position: relative;
+    width: var(--wrap);
+    height: var(--wrap);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .orb-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(120, 180, 255, 0.15);
+    animation: rotate var(--rt) linear infinite;
+  }
+
+  .orb-ring:nth-child(1) { width: 100%; height: 100%; --rt: 20s; }
+  .orb-ring:nth-child(2) { width: 80%; height: 80%; --rt: 15s; animation-direction: reverse; border-color: rgba(120,180,255,0.1); }
+  .orb-ring:nth-child(3) { width: 60%; height: 60%; --rt: 25s; border-color: rgba(180,220,255,0.08); }
+
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .orb {
+    width: var(--orb);
+    height: var(--orb);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%,
+      rgba(180, 220, 255, 0.9),
+      rgba(80, 140, 220, 0.7) 40%,
+      rgba(20, 60, 140, 0.5) 70%,
+      rgba(5, 20, 60, 0.3)
+    );
+    box-shadow:
+      0 0 60px rgba(100, 160, 255, 0.4),
+      0 0 120px rgba(80, 130, 220, 0.2),
+      0 0 180px rgba(60, 100, 200, 0.1),
+      inset 0 0 40px rgba(200, 230, 255, 0.2);
+    transition: transform 0.05s linear, box-shadow 0.05s linear;
+    position: relative;
+    z-index: 2;
+  }
+
+  .number {
+    display:none;
+    font-family: 'Courier Prime', monospace;
+    font-size: 4rem;
+    letter-spacing: 0.05em;
+    color: white;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+    min-width: 10ch;
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .phase {
+    font-size: clamp(1rem, 4vw, 1.8rem);
+    font-weight: 300;
+    font-style: italic;
+    letter-spacing: 0.08em;
+    color: white;
+    text-align: center;
+    min-height: 2.5rem;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+    transition: opacity 0.5s ease;
+    max-width: min(90vw, 600px);
+    line-height: 1.5;
+    padding: 0 8px;
+  }
+
+  .arc-svg {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .arc-track {
+    fill: none;
+    stroke: rgba(100, 150, 220, 0.1);
+    stroke-width: 2;
+  }
+
+  .arc-forward {
+    fill: none;
+    stroke: rgba(150, 200, 255, 0.75);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .arc-reverse {
+    fill: none;
+    stroke: rgba(200, 230, 255, 0.45);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .start-btn {
+    background: transparent;
+    border: 1px solid rgba(150, 200, 255, 0.4);
+    color: rgba(200, 225, 255, 0.8);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1rem, 3vw, 1.1rem);
+    font-style: italic;
+    letter-spacing: 0.15em;
+    padding: 14px 48px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    border-radius: 2px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .start-btn:hover, .start-btn:active {
+    background: rgba(100, 160, 255, 0.1);
+    border-color: rgba(150, 200, 255, 0.7);
+    color: white;
+    box-shadow: 0 0 20px rgba(100, 160, 255, 0.2);
+  }
+
+  .cycle-indicator {
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    color: rgba(150, 190, 255, 0.4);
+    text-transform: uppercase;
+    font-family: 'Courier Prime', monospace;
+    min-height: 1rem;
+  }
+
+  /* ── Music Player ────────────────────────────────────────── */
+  .music-player {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+  }
+
+  .music-tab {
+    display: flex;
+    justify-content: center;
+  }
+
+  .music-tab-btn {
+    background: rgba(4, 12, 28, 0.9);
+    border: 1px solid rgba(100, 160, 255, 0.18);
+    border-bottom: none;
+    color: rgba(130, 180, 255, 0.55);
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.22em;
+    padding: 6px 22px 5px;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: color 0.3s;
+    text-transform: uppercase;
+  }
+  .music-tab-btn:hover { color: rgba(200, 225, 255, 0.85); }
+
+  .music-panel {
+    background: rgba(4, 12, 28, 0.95);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid rgba(100, 160, 255, 0.12);
+    padding: 14px 18px max(18px, env(safe-area-inset-bottom));
+    transition: transform 0.4s cubic-bezier(.4,0,.2,1), opacity 0.4s ease;
+  }
+
+  .music-panel.hidden {
+    transform: translateY(110%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .music-song-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(0.85rem, 2.8vw, 1.05rem);
+    font-style: italic;
+    color: rgba(200, 225, 255, 0.82);
+    text-align: center;
+    margin-bottom: 10px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .music-progress-wrap {
+    width: 100%;
+    height: 4px;
+    background: rgba(100, 160, 255, 0.1);
+    border-radius: 3px;
+    cursor: pointer;
+    margin-bottom: 6px;
+    position: relative;
+  }
+
+  .music-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, rgba(100,160,255,0.55), rgba(200,230,255,0.9));
+    border-radius: 3px;
+    width: 0%;
+    pointer-events: none;
+    transition: width 0.4s linear;
+  }
+
+  .music-time {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.6rem;
+    color: rgba(130, 180, 255, 0.35);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .music-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    margin-bottom: 12px;
+  }
+
+  .music-btn {
+    background: none;
+    border: none;
+    color: rgba(140, 195, 255, 0.65);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 8px 14px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: color 0.2s, transform 0.1s;
+    line-height: 1;
+    border-radius: 50%;
+  }
+  .music-btn:hover, .music-btn:active { color: white; transform: scale(1.15); }
+  .music-btn.play-btn { font-size: 1.5rem; color: rgba(200, 225, 255, 0.9); }
+
+  .music-select-label {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    color: rgba(100, 150, 220, 0.4);
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 5px;
+  }
+
+  .music-select {
+    width: 100%;
+    background: rgba(8, 20, 45, 0.85);
+    border: 1px solid rgba(100, 160, 255, 0.18);
+    border-radius: 4px;
+    color: rgba(175, 210, 255, 0.78);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(0.85rem, 2.5vw, 1rem);
+    padding: 9px 32px 9px 12px;
+    cursor: pointer;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    text-align: center;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(100,160,255,0.4)'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+  .music-select option { background: #0a192f; color: rgba(180,215,255,0.9); }
+  .music-select:focus { border-color: rgba(150, 200, 255, 0.42); }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="container">
+  <div class="cycle-indicator" id="cycleIndicator"></div>
+
+  <div class="orb-wrap">
+    <div class="orb-ring"></div>
+    <div class="orb-ring"></div>
+    <div class="orb-ring"></div>
+    <svg class="arc-svg" viewBox="0 0 400 400" style="transform: rotate(-90deg); transform-origin: center;">
+      <circle class="arc-track"   cx="200" cy="200" r="190"/>
+      <circle class="arc-forward" id="arcForward" cx="200" cy="200" r="190" style="transform-origin: center;"/>
+      <circle class="arc-reverse" id="arcReverse" cx="200" cy="200" r="190" style="transform-origin: center; transform: scaleX(-1);"/>
+    </svg>
+    <div class="orb" id="orb"></div>
+  </div>
+
+  <div class="number" id="number">0.00000</div>
+  <div class="phase"  id="phase">ready</div>
+  <button class="start-btn" id="startBtn" onclick="startBreathing()">begin</button>
+</div>
+
+<!-- ── Music Player ──────────────────────────────────────────── -->
+<div class="music-player">
+  <div class="music-tab">
+    <button class="music-tab-btn" id="musicTabBtn" onclick="toggleMusicPanel()">♪ music ▲</button>
+  </div>
+  <div class="music-panel" id="musicPanel">
+    <div class="music-song-name" id="songName">— loading —</div>
+    <div class="music-progress-wrap" id="progressWrap">
+      <div class="music-progress-bar" id="progressBar"></div>
+    </div>
+    <div class="music-time">
+      <span id="timeCurrent">0:00</span>
+      <span id="timeTotal">0:00</span>
+    </div>
+    <div class="music-controls">
+      <button class="music-btn" onclick="prevTrack()" title="Previous">&#9664;&#9664;</button>
+      <button class="music-btn play-btn" id="playPauseBtn" onclick="togglePlay()">&#9654;</button>
+      <button class="music-btn" onclick="nextTrack()" title="Next">&#9654;&#9654;</button>
+    </div>
+    <div class="music-select-label">choose a song</div>
+    <select class="music-select" id="trackSelect" onchange="selectTrack(this.value)"></select>
+  </div>
+</div>
+
+<script>
+  // ── Stars ────────────────────────────────────────────────
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 120; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2 + 0.5;
+    s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--o:${Math.random()*0.6+0.1};--d:${Math.random()*4+2}s;animation-delay:${Math.random()*5}s;`;
+    starsEl.appendChild(s);
+  }
+
+  // ── Phases ───────────────────────────────────────────────
+  let running       = false;
+  let currentPhase  = 0;
+
+const phases = [
+    { 
+      labels: [
+        'breathe in, remember to relax', 
+        'breathe in from the universe', 
+        'inhale peace', 
+        'breathe in serenity', 
+        'feel the relief of air coming into your lungs',
+        'draw in calming energy',
+        'fill your body with light',
+        'inhale deep stillness',
+        'welcome the present moment',
+        'breathe in clarity and focus'
+      ], 
+      type: 'in', 
+      ms: 4000 
+    },
+    { 
+      labels: [
+        'be you, be present, notice your senses', 
+        'be still', 
+        'be present',
+        'let the stillness settle',
+        'hold the light within',
+        'pause and feel your heartbeat',
+        'suspend in this quiet space',
+        'embrace the fullness of now'
+      ], 
+      type: 'hold-full', 
+      ms: 4000 
+    },
+    { 
+      labels: [
+        'breathe out, expand into the universe', 
+        'exhale tension', 
+        'release all worries', 
+        'release all anxiety',
+        'let go of what no longer serves you',
+        'exhale doubt and fear',
+        'breathe out into the infinite',
+        'soften your body as you release',
+        'empty your mind completely'
+      ], 
+      type: 'out', 
+      ms: 4000 
+    },
+    { 
+      labels: [
+        'be the universe, be god, be source', 
+        'expand outward', 
+        'be one',
+        'rest in the quiet void',
+        'feel the weightlessness of being',
+        'remain open and formless',
+        'anchor yourself in the universe',
+        'find peace in the emptiness'
+      ], 
+      type: 'hold-empty', 
+      ms: 4000 
+    },
+  ];
+  // ── Arc constants ────────────────────────────────────────
+  const R = 190;
+  const C = 2 * Math.PI * R; // circumference
+
+  const arcFwd = document.getElementById('arcForward');
+  const arcRev = document.getElementById('arcReverse');
+
+  arcFwd.style.strokeDasharray = C;
+  arcRev.style.strokeDasharray = C;
+
+  function setArcFwd(fill) { arcFwd.style.strokeDashoffset = C * (1 - fill); }
+  function setArcRev(fill) { arcRev.style.strokeDashoffset = C * (1 - fill); }
+
+  let phaseStart    = null;
+  let rafId         = null;
+  let cycleCount    = 0;
+
+  const numberEl = document.getElementById('number');
+  const phaseEl  = document.getElementById('phase');
+  const orbEl    = document.getElementById('orb');
+  const startBtn = document.getElementById('startBtn');
+  const cycleEl  = document.getElementById('cycleIndicator');
+
+  // ── Orb glow helper ──────────────────────────────────────
+  function setOrb(v) { // v 0..4
+    const t = v / 4;
+    const g = 20 + t * 90;
+    orbEl.style.transform = `scale(${0.7 + t * 0.8})`;
+    orbEl.style.boxShadow = `0 0 ${g}px rgba(100,160,255,${.3+t*.5}),0 0 ${g*2}px rgba(80,130,220,${.15+t*.25}),0 0 ${g*3}px rgba(60,100,200,${.08+t*.15}),inset 0 0 ${20+t*40}px rgba(200,230,255,${.15+t*.25})`;
+  }
+
+  // ── Main render loop ─────────────────────────────────────
+  function frame(ts) {
+    if (!running) return;
+    if (!phaseStart) phaseStart = ts;
+
+    const elapsed = ts - phaseStart;
+    const ph = phases[currentPhase];
+    const t  = Math.min(elapsed / ph.ms, 1);
+
+    switch (ph.type) {
+      case 'in':
+        // 4 to 0 (user asked for 4 to 0, 0 to 4, 4 to 0, 0 to 4)
+        numberEl.textContent = ((1 - t) * 4).toFixed(5);
+        setArcFwd(t);
+        setArcRev(0);
+        setOrb(t * 4);
+        break;
+
+      case 'hold-full':
+        // 0 to 4
+        numberEl.textContent = (t * 4).toFixed(5);
+        setArcFwd(1);
+        setArcRev(t);
+        setOrb(4);
+        break;
+
+      case 'out':
+        // 4 to 0
+        numberEl.textContent = ((1 - t) * 4).toFixed(5);
+        setArcFwd(1 - t);
+        setArcRev(0);
+        setOrb((1 - t) * 4);
+        break;
+
+      case 'hold-empty':
+      // 0 to 4
+        numberEl.textContent = (t * 4).toFixed(5);
+        setArcFwd(0);
+        setArcRev(0);
+        setOrb(0);
+        break;
+    }
+
+    if (t >= 1) {
+      currentPhase = (currentPhase + 1) % phases.length;
+      if (currentPhase === 0) {
+        cycleCount++;
+        cycleEl.textContent = `cycle ${cycleCount}`;
+      }
+      phaseEl.style.opacity = '0';
+      const labels = phases[currentPhase].labels;
+      const nextLabel = labels[Math.floor(Math.random() * labels.length)];
+      setTimeout(() => { phaseEl.textContent = nextLabel; phaseEl.style.opacity = '1'; }, 300);
+      phaseStart = ts;
+    }
+
+    rafId = requestAnimationFrame(frame);
+  }
+
+  // ── Reset ────────────────────────────────────────────────
+  function reset() {
+    numberEl.textContent = '0.00000';
+    phaseEl.textContent  = 'ready';
+    cycleEl.textContent  = '';
+    setOrb(0);
+    setArcFwd(0);
+    setArcRev(0);
+  }
+
+  // ── Start / stop ─────────────────────────────────────────
+  function startBreathing() {
+    if (running) {
+      running = false;
+      cancelAnimationFrame(rafId);
+      startBtn.textContent = 'begin';
+      currentPhase = 0;
+      phaseStart   = null;
+      cycleCount   = 0;
+      reset();
+      return;
+    }
+    running      = true;
+    currentPhase = 0;
+    phaseStart   = null;
+    cycleCount   = 1;
+    startBtn.textContent    = 'stop';
+    const firstLabels = phases[0].labels;
+    phaseEl.textContent     = firstLabels[Math.floor(Math.random() * firstLabels.length)];
+    phaseEl.style.opacity   = '1';
+    cycleEl.textContent     = 'cycle 1';
+    rafId = requestAnimationFrame(frame);
+  }
+
+  reset();
+
+  // ── Music Player ──────────────────────────────────────────
+  const tracks = [
+    { name: 'Gentle Breathing Garden',   file: 'music/Gentle Breathing Garden.mp3' },
+    { name: 'Gentle Breathing Garden 2', file: 'music/Gentle Breathing Garden (1).mp3' },
+    { name: 'Slow Tide Breath',          file: 'music/Slow Tide Breath.mp3' },
+    { name: 'Slow Tide Breath 2',        file: 'music/Slow Tide Breath (1).mp3' },
+    { name: 'Soft Tides of Breath',      file: 'music/Soft Tides of Breath.mp3' },
+    { name: 'Soft Tides of Breath 2',    file: 'music/Soft Tides of Breath (1).mp3' },
+    { name: 'Floating Over Sunday',      file: 'music/Floating Over Sunday.mp3' },
+    { name: 'Floating Over Sunday 2',    file: 'music/Floating Over Sunday (1).mp3' },
+  ];
+
+  let currentTrack = Math.floor(Math.random() * tracks.length);
+  let isPlaying    = false;
+  let panelVisible = true;
+
+  const audio          = new Audio();
+  const songNameEl     = document.getElementById('songName');
+  const progressBarEl  = document.getElementById('progressBar');
+  const progressWrapEl = document.getElementById('progressWrap');
+  const playPauseBtnEl = document.getElementById('playPauseBtn');
+  const timeCurrentEl  = document.getElementById('timeCurrent');
+  const timeTotalEl    = document.getElementById('timeTotal');
+  const trackSelectEl  = document.getElementById('trackSelect');
+  const musicPanelEl   = document.getElementById('musicPanel');
+  const musicTabBtnEl  = document.getElementById('musicTabBtn');
+
+  // Populate select
+  tracks.forEach((t, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = t.name;
+    trackSelectEl.appendChild(opt);
+  });
+
+  function fmtTime(s) {
+    if (!s || isNaN(s)) return '0:00';
+    return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  }
+
+  function loadTrack(idx, play) {
+    currentTrack = ((idx % tracks.length) + tracks.length) % tracks.length;
+    audio.src = tracks[currentTrack].file;
+    songNameEl.textContent = tracks[currentTrack].name;
+    trackSelectEl.value = currentTrack;
+    progressBarEl.style.width = '0%';
+    timeCurrentEl.textContent = '0:00';
+    timeTotalEl.textContent   = '0:00';
+    if (play) {
+      audio.play()
+        .then(() => { isPlaying = true; playPauseBtnEl.innerHTML = '&#9646;&#9646;'; })
+        .catch(() => {});
+    }
+  }
+
+  function togglePlay() {
+    if (!audio.src) { loadTrack(currentTrack, true); return; }
+    if (isPlaying) {
+      audio.pause();
+      isPlaying = false;
+      playPauseBtnEl.innerHTML = '&#9654;';
+    } else {
+      audio.play()
+        .then(() => { isPlaying = true; playPauseBtnEl.innerHTML = '&#9646;&#9646;'; })
+        .catch(() => {});
+    }
+  }
+
+  function nextTrack() { loadTrack(currentTrack + 1, isPlaying); }
+  function prevTrack() {
+    if (audio.currentTime > 3) { audio.currentTime = 0; }
+    else { loadTrack(currentTrack - 1, isPlaying); }
+  }
+  function selectTrack(val) { loadTrack(parseInt(val), isPlaying); }
+
+  audio.addEventListener('timeupdate', () => {
+    if (!audio.duration) return;
+    progressBarEl.style.width = (audio.currentTime / audio.duration * 100) + '%';
+    timeCurrentEl.textContent = fmtTime(audio.currentTime);
+    timeTotalEl.textContent   = fmtTime(audio.duration);
+  });
+
+  audio.addEventListener('ended', nextTrack);
+
+  progressWrapEl.addEventListener('click', e => {
+    if (!audio.duration) return;
+    const r = progressWrapEl.getBoundingClientRect();
+    audio.currentTime = ((e.clientX - r.left) / r.width) * audio.duration;
+  });
+
+  function toggleMusicPanel() {
+    panelVisible = !panelVisible;
+    musicPanelEl.classList.toggle('hidden', !panelVisible);
+    musicTabBtnEl.textContent = panelVisible ? '♪ music ▲' : '♪ music ▼';
+  }
+
+  // Load a random track on init (no autoplay — waits for user gesture)
+  loadTrack(currentTrack, false);
+</script>
+</body>
+</html>
